@@ -23,7 +23,7 @@ class UltimateTicTacToe:
             player = self.curr_player
             curr_subgrid = board.curr_subgrid
 
-            subgrid, move = player.move(board, curr_subgrid)
+            subgrid, move = player.rand_move(board, curr_subgrid)
             
             game_state, result, done = board.subgrid_move(subgrid, player, move)
 

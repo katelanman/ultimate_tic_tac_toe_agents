@@ -1,10 +1,11 @@
 import numpy as np
+import time
 
 """
 tic tac toe board. 
 0 - empty square
-1 - O's
-2 - X's
+1 - X's
+2 - O's
 """
 class Board:
     def __init__(self, grid_size=3) -> None:
@@ -79,6 +80,17 @@ class UltimateTicTacToeBoard(Board):
 
         self.curr_subgrid = None
 
+    def get_str_state(self):
+        """ 
+        gets state as a len (n*n)^2 + x str representation; 
+        first (n*n)^2 characters indicate the status of each square (0 - empty, 1,2 - player 1 or 2)
+        final characters represent the current playable subgrid (0 - all, 1,...,(n*n))
+        """
+        states = [str(i) for b in self.subgrids.flatten() for i in b.state.astype(int).flatten()]
+        curr = [str(self.grid_size*self.curr_subgrid[0] + self.curr_subgrid[1] + 1) if self.curr_subgrid else "0"]
+        
+        return ''.join(states + curr)
+
     def subgrid_move(self, subgrid_pos, player, pos) -> tuple[np.array, int, bool]:
         """ 
         player moves in square pos=(x, y) of subgrid=(X, Y)
@@ -107,19 +119,4 @@ class UltimateTicTacToeBoard(Board):
 
         return self.state, 0, False
 
-    def check_win(self, last_player, last_pos) -> bool:
-        return super().check_win(last_player, last_pos)
-    
-    def num_empty(self):
-        return super().num_empty()
-
-    def reset(self):
-        super().reset()
-
-        # reset all sub-grids
-        for grid in self.subgrids.flatten():
-            grid.reset()
-
-    
-
-    
+    def check_win(self, last_
