@@ -170,15 +170,13 @@ class MCTSPlayer(Player):
             board (Object) - ultimate tic tac toe game object
             subgrid (tuple) - tuple indicating the current subgrid to play in
         """
-        print("training")
-        for _ in tqdm(range(iters)):
-            # selection and expansion
-            selected = self.traverse()
+        # selection and expansion
+        selected = self.traverse()
 
-            # play randomly 
-            # TODO: update number of times this is run
-            for _ in range(10):
-                self.run_simulation(selected)
+        # play randomly 
+        # TODO: update number of times this is run
+        for _ in range(10):
+            self.run_simulation(selected)
     
     def move(self, board):
         # TODO: hardcoded 81

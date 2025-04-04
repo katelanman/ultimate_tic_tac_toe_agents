@@ -29,13 +29,3 @@ class UltimateTicTacToe:
             self.curr_player = self.player1 if player != self.player1 else self.player2
 
         return result
-
-p1 = Player(1)
-# p2 = Player(2)
-p2 = MCTSPlayer(2, exploration_weight=0.01)
-p2.train(100000)
-# print(p2.explored["0"*82])
-game = UltimateTicTacToe(p1, p2)
-results = []
-for _ in tqdm(range(100)):
-    results.append(game.play_ga
