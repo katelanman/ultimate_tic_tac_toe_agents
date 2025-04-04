@@ -1,6 +1,6 @@
 import numpy as np
 from player import Player
-from board import UltimateTicTacToeBoard
+from board import UltimateTicTacToeBoard, check_win
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -76,7 +76,7 @@ class MCTSPlayer(Player):
 
     def add_node(self, node):
         """ add node to the tree """            
-        children = self.get_children(node, len(self.curr_path)%2 + 1) # curr player corresponds to depth in tree
+        children = self.get_children(node, (len(self.curr_path) + 1) % 2 + 1) # curr player corresponds to depth in tree
         self.explored[node] = {"children": children,
                                 "unexplored_children": children.copy(),
                                 "wins": 0,
@@ -101,6 +101,9 @@ class MCTSPlayer(Player):
         best_node = None
 
         for child in self.explored[node]['children']:
+            if child not in self.explored:
+                continue
+
             # calculate UCB formula for each child node 
             X = self.explored[child]['wins']
             n = self.explored[child]['visits']
@@ -116,7 +119,6 @@ class MCTSPlayer(Player):
         """ traverse tree """
         node = self.start_node
         unexplored = self.explored[node]['unexplored_children']
-        self.curr_path.append(node)
 
         while len(unexplored) == 0:
             node = self.UCT(node)
@@ -130,4 +132,63 @@ class MCTSPlayer(Player):
 
         return self.pick_unvisited(node)
     
-    def update_node(self
+    def update_node(self, node, w):
+        """ update node wins and visits """
+        self.explored[node]["wins"] += w
+        self.explored[node]["visits"] += 1
+
+    def run_simulation(self, start_state):
+        """ run a simulated playout from a given start state"""
+        # simulation
+        board = UltimateTicTacToeBoard(init_state=start_state)
+        player = Player(self.id)
+        opponent = Player(self.id % 2 + 1)
+        
+        done = check_win(board.state)
+        result = done
+        curr_player = player if self.id == (len(self.curr_path) + 1)%2 + 1 else opponent
+        while not done:
+            subgrid, move = player.move(board)
+            game_state, result, done = board.subgrid_move(subgrid, curr_player, move)
+
+            # next player
+            curr_player = player if curr_player != player else opponent
+
+        win = result == self.id
+
+        # backprop
+        for node in self.curr_path:
+            self.explored[node]['wins'] += win
+            self.explored[node]['visits'] += 1
+
+        self.curr_path = [self.start_node]
+
+    def train(self, iters):
+        """
+        random agent for playing ultimate tic tac toe
+        Params:
+            board (Object) - ultimate tic tac toe game object
+            subgrid (tuple) - tuple indicating the current subgrid to play in
+        """
+        print("training")
+        for _ in tqdm(range(iters)):
+            # selection and expansion
+            selected = self.traverse()
+
+            # play randomly 
+            # TODO: update number of times this is run
+            for _ in range(10):
+                self.run_simulation(selected)
+    
+    def move(self, board):
+        # TODO: hardcoded 81
+        state = board.get_str_state()
+        if state in self.explored and len(self.explored[state]["unexplored_children"]) < len(self.explored[state]["children"]):
+            move = self.UCT(state)
+            idx = int([i for i in range(81) if state[i] != move[i]][0])
+            
+            inner_pos = idx % 9
+            outer_pos = idx // 9
+            return tuple((outer_pos // 3, outer_pos % 3)), tuple((inner_pos // 3, inner_pos % 3))
+        
+        return super().move(board)

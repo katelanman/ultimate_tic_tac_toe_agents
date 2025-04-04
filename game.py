@@ -1,5 +1,6 @@
 from board import UltimateTicTacToeBoard
 from player import Player
+from MCTS_player import MCTSPlayer
 from tqdm import tqdm
 
 from collections import Counter
@@ -21,10 +22,7 @@ class UltimateTicTacToe:
         done = False
         while not done:
             player = self.curr_player
-            curr_subgrid = board.curr_subgrid
-
-            subgrid, move = player.rand_move(board, curr_subgrid)
-            
+            subgrid, move = player.move(board)
             game_state, result, done = board.subgrid_move(subgrid, player, move)
 
             # next player
@@ -33,12 +31,11 @@ class UltimateTicTacToe:
         return result
 
 p1 = Player(1)
-p2 = Player(2)
-
+# p2 = Player(2)
+p2 = MCTSPlayer(2, exploration_weight=0.01)
+p2.train(100000)
+# print(p2.explored["0"*82])
 game = UltimateTicTacToe(p1, p2)
-
 results = []
-for _ in tqdm(range(10000)):
-    results.append(game.play_game())
-
-print(Counter(results))
+for _ in tqdm(range(100)):
+    results.append(game.play_ga

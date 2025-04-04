@@ -5,7 +5,7 @@ class Player:
     def __init__(self, id) -> None:
         self.id = id
 
-    def rand_move(self, board, subgrid) -> tuple[int, int]:
+    def move(self, board) -> tuple[int, int]:
         """
         random agent for playing ultimate tic tac toe
         Params:
@@ -13,6 +13,7 @@ class Player:
             subgrid (tuple) - tuple indicating the current subgrid to play in
         """
         # TODO: some function to determine players next move
+        subgrid = board.curr_subgrid
 
         # randomly choose an empty square
         if subgrid is None: # can move anywhere
