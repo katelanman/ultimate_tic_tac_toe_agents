@@ -17,13 +17,7 @@ class Player:
 
         # randomly choose an empty square
         if subgrid is None: # can move anywhere
-            print("subgrid is None")
             subgrid = tuple(random.choice(np.array(np.where(board.state == 0)).T))
-            print("subgrid:", subgrid)
-            test = len(np.array(np.where(board.subgrids[subgrid].state == 0)).T) == 0
-            if test: 
-                print("test true:", subgrid)
-                print(board.subgrids[subgrid].state)
 
         pos = tuple(random.choice(np.array(np.where(board.subgrids[subgrid].state == 0)).T))
         return subgrid, pos 

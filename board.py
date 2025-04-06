@@ -9,6 +9,9 @@ tic tac toe board.
 """
 def check_win(grid) -> int:
     """ Check whether there is a winner """
+    if len(grid) ** 2 - np.count_nonzero(grid) == 0:
+        return -1
+    
     # check row/col win
     for i in range(len(grid)):
         row = list(set(grid[i,:]))
