@@ -9,22 +9,25 @@ tic tac toe board.
 """
 def check_win(grid) -> int:
     """ Check whether there is a winner """
+    if len(grid) ** 2 - np.count_nonzero(grid) == 0:
+        return -1
+    
     # check row/col win
     for i in range(len(grid)):
         row = list(set(grid[i,:]))
         col = list(set(grid[:,i]))
         if len(row) == 1 and row[0] != 0:
-            return row[0]
+            return int(row[0])
         if len(col) == 1 and col[0] != 0:
-            return col[0]
+            return int(col[0])
         
     # check diagonal wins
     diag = list(set(grid[i, i] for i in range(len(grid))))
     back_diag = list(set(grid[i, len(grid) - 1 - i] for i in range(len(grid))))
     if len(diag) == 1 and diag[0] != 0:
-        return diag[0]
+        return int(diag[0])
     if len(back_diag) == 1 and back_diag[0] != 0:
-        return back_diag[0]
+        return int(back_diag[0])
     
     return 0
 
@@ -146,13 +149,17 @@ class UltimateTicTacToeBoard(Board):
         Returns:
             game state, game result (winning player id, -1 for tie, 0 for still going), whether the game is done
         """
+        if self.curr_subgrid and subgrid_pos != self.curr_subgrid:
+            print(f"must play in {self.curr_subgrid}, attempted {subgrid_pos}")
+            raise ValueError("Invalid move")
+        
         subgrid = self.subgrids[subgrid_pos]
         next_subgrid = self.subgrids[pos]
 
         sub_state, result, done = subgrid.move(player, pos)
 
         # no more playable squares in next subgrid
-        if not next_subgrid.playable or next_subgrid.num_empty == 0:
+        if not next_subgrid.playable or next_subgrid.num_empty() == 0:
             self.curr_subgrid = None 
         else:
             self.curr_subgrid = pos 

@@ -21,11 +21,10 @@ class UltimateTicTacToe:
 
         done = False
         while not done:
-            player = self.curr_player
-            subgrid, move = player.move(board)
-            game_state, result, done = board.subgrid_move(subgrid, player, move)
+            subgrid, move = self.curr_player.move(board)
+            game_state, result, done = board.subgrid_move(subgrid, self.curr_player, move)
 
             # next player
-            self.curr_player = self.player1 if player != self.player1 else self.player2
+            self.curr_player = self.player1 if self.curr_player != self.player1 else self.player2
 
         return result
