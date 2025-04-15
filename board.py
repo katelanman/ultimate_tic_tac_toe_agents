@@ -128,7 +128,8 @@ class UltimateTicTacToeBoard(Board):
         )
         self.state = np.array([[check_win(self.subgrids[i,j].state) for j in range(n)] for i in range(n)])
 
-        self.curr_subgrid = tuple([(int(state[n**4:]) - 1) // 3, (int(state[n**4:]) - 1) % 3])
+        self.curr_subgrid = tuple([(int(state[n**4:]) - 1) // n, (int(state[n**4:]) - 1) % n])
+        
         if not self.subgrids[self.curr_subgrid].playable:
             self.curr_subgrid = None
 
