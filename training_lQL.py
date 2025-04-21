@@ -1,9 +1,7 @@
 from board import UltimateTicTacToeBoard
 from player import Player
-from linearQL_player import QPlayer
-from MCTS_player import MCTSPlayer
+from linearQL_player import LinearQPlayer
 from tqdm import tqdm
-import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import os
@@ -154,66 +152,6 @@ class QTrainer:
                 # reset counters
                 wins1, wins2, draws = 0, 0, 0
     
-    def train_vs_mcts(self, q_player, mcts_calc_time=0.1):
-        """train q-learning agent against mcts player"""
-        mcts_player = MCTSPlayer(3 - q_player.id, calculation_time=mcts_calc_time)
-        
-        print(f"Training Q-learning agent against MCTS player (calc_time={mcts_calc_time})...")
-        wins, losses, draws = 0, 0, 0
-        
-        for episode in tqdm(range(self.episodes)):
-            board = UltimateTicTacToeBoard()
-            first_player = q_player if episode % 2 == 0 else mcts_player  # alternate who goes first
-            second_player = mcts_player if episode % 2 == 0 else q_player
-            current_player = first_player
-            
-            done = False
-            move_count = 0
-            
-            while not done:
-                # get current player's move
-                subgrid, pos = current_player.move(board)
-                
-                # get reward
-                reward = -0.01  # small penalty for each move to encourage faster wins
-                
-                # make the move
-                game_state, result, done = board.subgrid_move(subgrid, current_player, pos)
-                
-                # update rewards based on game result
-                if done:
-                    if result == q_player.id:  # q-player won
-                        reward = 1.0
-                        wins += 1
-                    elif result == -1:  # draw
-                        reward = 0.2
-                        draws += 1
-                    else:  # q-player lost
-                        reward = -1.0
-                        losses += 1
-                
-                # update q-values if it was q-player's move
-                if current_player.id == q_player.id:
-                    q_player.post_move_update(board, reward, done)
-                
-                # switch players
-                current_player = second_player if current_player.id == first_player.id else first_player
-                move_count += 1
-            
-            # collect statistics at intervals but don't save the model
-            if (episode + 1) % self.stats_interval == 0:
-                # calculate and store statistics
-                total = wins + losses + draws
-                self.win_rates.append(wins / total)
-                self.loss_rates.append(losses / total)
-                self.draw_rates.append(draws / total)
-                
-                # print progress update
-                print(f"Episode {episode+1}/{self.episodes}: Win Rate: {wins/total:.2f}, Draw Rate: {draws/total:.2f}, Loss Rate: {losses/total:.2f}")
-                
-                # reset counters
-                wins, losses, draws = 0, 0, 0
-    
     def evaluate(self, q_player, opponent, num_games=100):
         """evaluate a trained q-player against an opponent"""
         # turn off training mode
@@ -289,7 +227,7 @@ class QTrainer:
 
 if __name__ == "__main__":
 
-    q_player = QPlayer(id=1, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.999)
+    q_player = LinearQPlayer(id=1, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.999)
     
     # create trainer
     trainer = QTrainer(episodes=5000, stats_interval=500)
