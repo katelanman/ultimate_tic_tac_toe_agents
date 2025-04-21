@@ -49,39 +49,10 @@ def train_against_random(episodes=5000, eval_interval=500):
     
     return q_agent
 
-def evaluate_agent(agent, opponent, eval_episodes=100):
-    """evaluate an agent against an opponent"""
-    # save original epsilon and set to 0 for evaluation (no exploration)
-    original_epsilon = agent.epsilon
-    agent.epsilon = 0
-    
-    wins = 0
-    ties = 0
-    losses = 0
-    
-    for _ in range(eval_episodes):
-        game = UltimateTicTacToe(agent, opponent)
-        result = game.play_game()
-        
-        if result == agent.id:
-            wins += 1
-        elif result == -1:
-            ties += 1
-        else:
-            losses += 1
-    
-    # restore original epsilon
-    agent.epsilon = original_epsilon
-    
-    return wins, ties, losses
-
-
 if __name__ == "__main__":
     # uncomment to run
-    # q_agent = train_against_random(episodes=10000)
+    q_agent = train_against_random(episodes=100000)
     
-    # create a q-learning agent, use it in a game
-    q_agent = QLearningPlayer(id=1, load=True, save_path="q_table_vs_random.pkl", epsilon=0.999)
     random_player = Player(id=2)
     game = UltimateTicTacToe(q_agent, random_player)
     result = game.play_game()
