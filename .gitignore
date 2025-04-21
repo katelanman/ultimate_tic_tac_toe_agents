@@ -171,3 +171,4 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+q_table_vs_random.pkl

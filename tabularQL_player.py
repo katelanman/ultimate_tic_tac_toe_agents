@@ -6,7 +6,7 @@ import pickle
 import os.path
 from tqdm import tqdm
 
-class TabularQLearningPlayer(Player):
+class TabularQPlayer(Player):
     def __init__(self, id, alpha=0.1, gamma=0.9, epsilon=0.999, save_path=None, load=False) -> None:
         """
         q-learning agent for Ultimate Tic Tac Toe
