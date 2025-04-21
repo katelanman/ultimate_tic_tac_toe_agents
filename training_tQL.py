@@ -6,6 +6,32 @@ import numpy as np
 from tqdm import tqdm
 import time
 
+def evaluate_agent(agent, opponent, eval_episodes=100):
+    """Evaluate an agent against an opponent"""
+    # Save original epsilon and set to 0 for evaluation (no exploration)
+    original_epsilon = agent.epsilon
+    agent.epsilon = 0
+    
+    wins = 0
+    ties = 0
+    losses = 0
+    
+    for _ in range(eval_episodes):
+        game = UltimateTicTacToe(agent, opponent)
+        result = game.play_game()
+        
+        if result == agent.id:
+            wins += 1
+        elif result == -1:
+            ties += 1
+        else:
+            losses += 1
+    
+    # Restore original epsilon
+    agent.epsilon = original_epsilon
+
+    return wins, ties, losses
+
 def train_against_random(episodes=5000, eval_interval=500):
     """train q-learning agent against random player and evaluate performance"""
     q_agent = TabularQPlayer(id=1, alpha=0.1, gamma=0.9, epsilon=1.0, save_path="q_table_vs_random.pkl")
@@ -34,31 +60,7 @@ def train_against_random(episodes=5000, eval_interval=500):
         print(f"After {i + eval_interval} episodes:")
         print(f"Win rate: {win_rate:.2f}, Tie rate: {tie_rate:.2f}, Loss rate: {loss_rate:.2f}")
     
-    def evaluate_agent(agent, opponent, eval_episodes=100):
-        """Evaluate an agent against an opponent"""
-        # Save original epsilon and set to 0 for evaluation (no exploration)
-        original_epsilon = agent.epsilon
-        agent.epsilon = 0
-        
-        wins = 0
-        ties = 0
-        losses = 0
-        
-        for _ in range(eval_episodes):
-            game = UltimateTicTacToe(agent, opponent)
-            result = game.play_game()
-            
-            if result == agent.id:
-                wins += 1
-            elif result == -1:
-                ties += 1
-            else:
-                losses += 1
-        
-        # Restore original epsilon
-        agent.epsilon = original_epsilon
-    
-        return wins, ties, losses
+
 
     # plot results
     plt.figure(figsize=(10, 6))
@@ -77,7 +79,7 @@ def train_against_random(episodes=5000, eval_interval=500):
 
 if __name__ == "__main__":
     # uncomment to run
-    q_agent = train_against_random(episodes=100000, eval_interval=10000)
+    q_agent = train_against_random(episodes=10000, eval_interval=1000)
     
     random_player = Player(id=2)
     game = UltimateTicTacToe(q_agent, random_player)
