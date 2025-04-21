@@ -89,69 +89,6 @@ class QTrainer:
                 # reset counters
                 wins, losses, draws = 0, 0, 0
     
-    def train_vs_self(self, q_player1, q_player2):
-        """train two q-learning agents against each other"""
-        print("Training Q-learning agents against each other...")
-        wins1, wins2, draws = 0, 0, 0
-        
-        for episode in tqdm(range(self.episodes)):
-            board = UltimateTicTacToeBoard()
-            first_player = q_player1 if episode % 2 == 0 else q_player2  # alternate who goes first
-            second_player = q_player2 if episode % 2 == 0 else q_player1
-            current_player = first_player
-            
-            done = False
-            move_count = 0
-            
-            while not done:
-                # get current player's move
-                subgrid, pos = current_player.move(board)
-                
-                # get reward
-                reward = -0.01  # small penalty for each move to encourage faster wins
-                
-                # make the move
-                game_state, result, done = board.subgrid_move(subgrid, current_player, pos)
-                
-                # update rewards based on game result
-                if done:
-                    if result == q_player1.id:  # player 1 won
-                        wins1 += 1
-                        q_player1.post_move_update(board, 1.0, done)
-                        q_player2.post_move_update(board, -1.0, done)
-                    elif result == q_player2.id:  # player 2 won
-                        wins2 += 1
-                        q_player1.post_move_update(board, -1.0, done)
-                        q_player2.post_move_update(board, 1.0, done)
-                    else:  # draw
-                        draws += 1
-                        q_player1.post_move_update(board, 0.2, done)
-                        q_player2.post_move_update(board, 0.2, done)
-                else:
-                    # update q-values for current player
-                    if current_player.id == q_player1.id:
-                        q_player1.post_move_update(board, reward, done)
-                    else:
-                        q_player2.post_move_update(board, reward, done)
-                
-                # switch players
-                current_player = second_player if current_player.id == first_player.id else first_player
-                move_count += 1
-            
-            # collect statistics at intervals but don't save the models
-            if (episode + 1) % self.stats_interval == 0:
-                # calculate and store statistics
-                total = wins1 + wins2 + draws
-                self.win_rates.append(wins1 / total)
-                self.loss_rates.append(wins2 / total)
-                self.draw_rates.append(draws / total)
-                
-                # print progress update
-                print(f"Episode {episode+1}/{self.episodes}: P1 Win Rate: {wins1/total:.2f}, Draw Rate: {draws/total:.2f}, P2 Win Rate: {wins2/total:.2f}")
-                
-                # reset counters
-                wins1, wins2, draws = 0, 0, 0
-    
     def evaluate(self, q_player, opponent, num_games=100):
         """evaluate a trained q-player against an opponent"""
         # turn off training mode
@@ -227,7 +164,7 @@ class QTrainer:
 
 if __name__ == "__main__":
 
-    q_player = LinearQPlayer(id=1, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.999)
+    q_player = LinearQPlayer(id=1, learning_rate=0.1, discount_factor=0.5, exploration_rate=0.999)
     
     # create trainer
     trainer = QTrainer(episodes=5000, stats_interval=500)
