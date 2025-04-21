@@ -4,6 +4,7 @@ from game import UltimateTicTacToe
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+from collections import Counter
 import time
 
 def evaluate_agent(agent, opponent, eval_episodes=100):
@@ -32,7 +33,7 @@ def evaluate_agent(agent, opponent, eval_episodes=100):
 
     return wins, ties, losses
 
-def train_against_random(episodes=5000, eval_interval=500):
+def train_against_random(episodes=5000, eval_interval=1000):
     """train q-learning agent against random player and evaluate performance"""
     q_agent = TabularQPlayer(id=1, alpha=0.1, gamma=0.9, epsilon=1.0, save_path="q_table_vs_random.pkl")
     random_player = Player(id=2)
@@ -79,9 +80,13 @@ def train_against_random(episodes=5000, eval_interval=500):
 
 if __name__ == "__main__":
     # uncomment to run
-    q_agent = train_against_random(episodes=10000, eval_interval=1000)
+    q_agent = train_against_random(episodes=3000, eval_interval=300)
     
     random_player = Player(id=2)
     game = UltimateTicTacToe(q_agent, random_player)
-    result = game.play_game()
-    print(f"Game result: {result}")
+    
+    results = []
+    for _ in tqdm(range(100)):
+        results.append(game.play_game())
+    
+    print(Counter(results))
