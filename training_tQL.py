@@ -33,7 +33,33 @@ def train_against_random(episodes=5000, eval_interval=500):
         
         print(f"After {i + eval_interval} episodes:")
         print(f"Win rate: {win_rate:.2f}, Tie rate: {tie_rate:.2f}, Loss rate: {loss_rate:.2f}")
+    
+    def evaluate_agent(agent, opponent, eval_episodes=100):
+        """Evaluate an agent against an opponent"""
+        # Save original epsilon and set to 0 for evaluation (no exploration)
+        original_epsilon = agent.epsilon
+        agent.epsilon = 0
         
+        wins = 0
+        ties = 0
+        losses = 0
+        
+        for _ in range(eval_episodes):
+            game = UltimateTicTacToe(agent, opponent)
+            result = game.play_game()
+            
+            if result == agent.id:
+                wins += 1
+            elif result == -1:
+                ties += 1
+            else:
+                losses += 1
+        
+        # Restore original epsilon
+        agent.epsilon = original_epsilon
+    
+        return wins, ties, losses
+
     # plot results
     plt.figure(figsize=(10, 6))
     plt.plot(episodes_x, win_rates, label='Win Rate')
@@ -51,7 +77,7 @@ def train_against_random(episodes=5000, eval_interval=500):
 
 if __name__ == "__main__":
     # uncomment to run
-    q_agent = train_against_random(episodes=100000)
+    q_agent = train_against_random(episodes=100000, eval_interval=10000)
     
     random_player = Player(id=2)
     game = UltimateTicTacToe(q_agent, random_player)
