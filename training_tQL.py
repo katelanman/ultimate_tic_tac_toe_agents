@@ -1,6 +1,5 @@
 from player import Player
-from MCTS_player import MCTSPlayer
-from tabularQL_player import QLearningPlayer
+from tabularQL_player import TabularQPlayer
 from game import UltimateTicTacToe
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +8,7 @@ import time
 
 def train_against_random(episodes=5000, eval_interval=500):
     """train q-learning agent against random player and evaluate performance"""
-    q_agent = QLearningPlayer(id=1, alpha=0.1, gamma=0.9, epsilon=1.0, save_path="q_table_vs_random.pkl")
+    q_agent = TabularQPlayer(id=1, alpha=0.1, gamma=0.9, epsilon=1.0, save_path="q_table_vs_random.pkl")
     random_player = Player(id=2)
     
     win_rates = []
@@ -79,9 +78,7 @@ def evaluate_agent(agent, opponent, eval_episodes=100):
 
 if __name__ == "__main__":
     # uncomment to run
-    q_agent = train_against_random(episodes=10000)
-    # q_agent = train_against_mcts(episodes=2000)
-    # compare_agents()
+    # q_agent = train_against_random(episodes=10000)
     
     # create a q-learning agent, use it in a game
     q_agent = QLearningPlayer(id=1, load=True, save_path="q_table_vs_random.pkl", epsilon=0.999)
