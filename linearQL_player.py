@@ -6,7 +6,7 @@ import pickle
 import os
 
 
-class QPlayer(Player):
+class LinearQPlayer(Player):
     def __init__(self, id, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.9999, 
                  decay_rate=0.999, load_weights=None) -> None:
         """
