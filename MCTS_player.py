@@ -5,10 +5,6 @@ from collections import defaultdict
 from tqdm import tqdm
 import time
 
-def check_open(line, player):
-    """ checks if a tic-tac-toe line could be won by a given player """
-    return len(np.where((line != 0) & (line != player))) == 0
-
 class MCTSPlayer(Player):
     def __init__(self, id, exploration_weight=1, calculation_time=1, n_rollouts=1) -> None:
         super().__init__(id)
@@ -20,31 +16,7 @@ class MCTSPlayer(Player):
         self.curr_path = []
         self.game_size = None
 
-    def count_open_lines(self, board):
-        """ the number of lines open to the player """
-        open = 0
-
-        # check rows and cols
-        for i in range(board.grid_size):
-            row = board.state[i,:]
-            col = board.state[:,i]
-
-            if check_open(row):
-                open += 1
-            if check_open(col):
-                open += 1
-
-        # check diagonals
-        front_diag = np.array([board.state[i,i] for i in range(board.grid_size)])
-        back_diag = np.array([board.state[board.grid_size - i:i] for i in range(board.grid_size)])
-        if check_open(front_diag): open += 1
-        if check_open(back_diag): open += 1
-
-        return open
-
-    def OLA(self, board):
-        """ evaluation function based on the number of open lines available at state t """
-        pass
+        self.stats = {"plays": 0, "simulations": 0}
     
     def get_children(self, state, next_player):
         """ get all possible next moves for a given state """
@@ -158,6 +130,9 @@ class MCTSPlayer(Player):
         return selected
 
     def run_simulation(self, current):
+        # track updates
+        self.stats["simulations"] += 1
+
         self.curr_path = [current]
         if current not in self.explored:
             self.add_node(current)
@@ -183,15 +158,34 @@ class MCTSPlayer(Player):
 
         for _ in range(self.n_rollouts):
             self.rollout(current)
+
+    def get_best_move(self, state):
+        if len(self.explored[state]['children']) == len(self.explored[state]['unexplored_children']):
+            return np.random.choice(self.explored[state]['children'])
+        
+        next_keys = []
+        next_vals = []
+
+        for child in self.explored[state]['children']:
+            if child in self.explored:
+                next_keys.append(child)
+                next_vals.append(self.explored[child]['wins'])
+
+        return next_keys[np.argmax(next_vals)]
     
     def move(self, board):
         """ select move using MCTS """
+        # updates
+        self.stats["plays"] += 1
+
         if self.game_size is None:
             self.game_size = board.grid_size
 
         self.explored = defaultdict(dict)
         state = board.get_str_state()
-        self.add_node(state)
+        
+        if state not in self.explored:
+            self.add_node(state)
 
         # run simulations for calculation time
         begin = time.time()
@@ -199,11 +193,13 @@ class MCTSPlayer(Player):
             self.run_simulation(state)
         
         # calculate best move
-        pos = self.UCT(state)
+        pos = self.get_best_move(state)
         idx = int([i for i in range(self.game_size ** 4) if state[i] != pos[i]][0])
         inner_pos = idx % (self.game_size ** 2)
         outer_pos = idx // (self.game_size ** 2)
 
-        return tuple((outer_pos // self.game_size, outer_pos % self.game_size)), \
-                tuple((inner_pos // self.game_size, inner_pos % self.game_size))
+        subgrid = tuple((outer_pos // self.game_size, outer_pos % self.game_size))
+        move = tuple((inner_pos // self.game_size, inner_pos % self.game_size))
+
+        return subgrid, move
 
