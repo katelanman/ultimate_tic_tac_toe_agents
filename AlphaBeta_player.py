@@ -35,23 +35,32 @@ class AlphaBetaMiniMaxPlayer(Player):
         player_positions = 0
         opponent_positions = 0
 
-        # optimizes for centers or corners of subgrids 
-        position_weights = [
-            [3, 1, 3],
-            [1, 5, 1],
-            [3, 1, 3]
-        ]
-
         for i in range(board.grid_size):
             for j in range(board.grid_size):
                 if board.state[i][j] == self.id:
-                    player_positions += 1 * position_weights[i][j]
-                elif board.state[i][j] != 0:
-                    opponent_positions += 1 * position_weights[i][j]
+                    player_positions += 1 * self.get_position_weights(board, i, j)
+                elif board.state[i][j] == self.opponent_id:
+                    opponent_positions += 1 * self.get_position_weights(board, i, j)
         
         return player_positions - opponent_positions
     
-    def get_children(self, board):
+    def get_position_weights(self, board, i, j) -> int:
+        # all positions in a 2x2 are corners 
+        if board.grid_size == 2:
+            return 3
+        max_dim = board.grid_size - 1
+        if (i == j):
+            # center position 
+            if ((i != 0 or i != max_dim)): return 5
+            # corner pieces (left diagonal)
+            else: return 3
+            # corner pieces (right diagonal)
+        elif ((i == 0 and j == max_dim) or (i == max_dim and j == 0)):
+            return 3
+        else:
+            return 1
+
+    def get_children(self, board, is_acsending):
         """
         Returns all valid moves based on current board state 
         return type: [((subgrid_pos_x,subgrid_pos_y), (empty_pos_x,empty_pos_y)), ...]
@@ -72,28 +81,29 @@ class AlphaBetaMiniMaxPlayer(Player):
                         all_empty_pos = np.argwhere(subgrid.state == 0)
                         for empty_pos in all_empty_pos:
                             all_valid_moves.append(((rowIndex, colIndex), tuple(empty_pos.tolist())))
-        return self.sort_children(all_valid_moves)
+        return self.sort_children(all_valid_moves, is_acsending, board)
 
-    def sort_children(self, all_valid_moves):
+    def sort_children(self, all_valid_moves, is_acsending, board):
         """
         Sort children based on optimal subgrid positions (center > corners > sides)
+        Ordering depends on is_acsending flag where True sorts moves from most optimal to least 
         """
         moves_values = []
         for move in all_valid_moves:
             subgrid_pos, pos = move
-            # Prefer center of subgrids and corners
-            center_preference = 5 if pos == (1, 1) else 3 if pos in [(0,1), (1,0), (1,2), (2,1)] else 1
-            # Prefer strategic subgrids (center or corners)
-            subgrid_preference = 5 if subgrid_pos == (1, 1) else 3 if subgrid_pos in [(0,1), (1,0), (1,2), (2,1)] else 1
-            moves_values.append((move, center_preference * subgrid_preference))
-        return [move for move, _ in sorted(moves_values, key=lambda x: x[1], reverse=True)]
+            # Weight for individual subgrid 
+            preference = self.get_position_weights(board, pos[0], pos[1])
+            # Weight for board
+            subgrid_preference = self.get_position_weights(board, subgrid_pos[0], subgrid_pos[1])
+            moves_values.append((move, preference * subgrid_preference))
+        return [move for move, _ in sorted(moves_values, key=lambda x: x[1], reverse=is_acsending)]
 
     def mini_max(self, board, depth, alpha, beta, is_maximizing):
         """
         Minimax algorithm with alpha-beta pruning
         """
         # get hash of board state
-        board_state_hash = board.get_str_state()[:-1]
+        board_state_hash = board.get_str_state()
 
         if board_state_hash in self.transposition_table:
             utility_value, stored_depth, best_move_stored = self.transposition_table[board_state_hash]
@@ -109,7 +119,7 @@ class AlphaBetaMiniMaxPlayer(Player):
             return utility_value, None
         
         # get all children of current board state 
-        all_valid_moves = self.get_children(board)
+        all_valid_moves = self.get_children(board, is_maximizing)
         if not all_valid_moves:
             return 0, None 
         
@@ -176,7 +186,7 @@ class AlphaBetaMiniMaxPlayer(Player):
         _, best_move = self.mini_max(board, self.depth,float('-inf'), float('inf'), True)
         # if no best move, first valid move is made 
         if best_move is None:
-            valid_moves = self.get_children(board)
+            valid_moves = self.get_children(board, True)
             if valid_moves:
                 return valid_moves[0]
             raise ValueError("No valid moves available")
